@@ -83,11 +83,12 @@ VOICE = "coral"  # or eg onyx, nova, sage, alloy (only used in full_voice_interv
 
 
 # Interviewer API and model setup
-API = "openai"  # can be "openai", "anthropic", "google", or "azure"
+API = "mistral"  # can be "openai", "anthropic", "google","mistral" or "azure"
 # (full_voice_interview.py currently only supports "openai")
-MODEL = "gpt-4.1-2025-04-14"  # make sure to set API accordingly
+# MODEL = "gpt-4.1-2025-04-14"  # make sure to set API accordingly
 # For voice-only interviews via `streamlit run full_voice_interview.py`, set e.g.
 # MODEL = "gpt-audio-2025-08-28"
+MODEL="mistral-medium-2508"
 
 
 # Additional API arguments

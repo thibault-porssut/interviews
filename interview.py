@@ -179,6 +179,12 @@ elif config.API == "azure":
     )
     api_kwargs["stream"] = True
 
+if config.API == "mistral":
+    from mistralai.client import Mistral
+
+    client = Mistral(api_key=st.secrets["KEY_MISTRAL"])
+    api_kwargs["stream"] = True
+
 else:
     raise ValueError(f"Unknown API: {config.API}")
 
