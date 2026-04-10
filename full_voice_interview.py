@@ -173,7 +173,7 @@ if config.API == "openai":
 elif config.API == "mistral":
     client = Mistral(api_key=st.secrets["KEY_MISTRAL"])
 else:
-    raise ValueError("Only the OpenAI API is currently supported for this interview.")
+    raise ValueError("Only the OpenAI and Mistral API are currently supported for this interview.")
 
 # Initialise API kwargs
 if isinstance(config.ADDITIONAL_API_KWARGS, dict):
@@ -191,6 +191,15 @@ if config.API == "openai":
 elif config.API == "mistral":
     api_kwargs["messages"] = st.session_state.messages
     api_kwargs["model"] = config.MODEL
+    sample_audio_b64 = base64.b64encode(Path("resultat.mp3").read_bytes()).decode()
+
+    voice = client.audio.voices.create(
+        name="interviewer_voice",
+        sample_audio=sample_audio_b64,
+        sample_filename="resultat.mp3",
+        languages=["en", "fr"],
+        gender="female",
+    )
 
 
 
@@ -241,52 +250,40 @@ if not st.session_state.messages and st.session_state.interview_active:
                 
                 
             elif config.API == "mistral":
-                # completion_response = client.chat.complete(**api_kwargs)
-                # interviewer_message_audio_api =completion_response.choices[0].message.content
-
-                # speech to text
-                #  voice_response={
-                #     "content": voice_response.getvalue(),
-                #     "file_name": voice_response.name,
-                # }
-
-                # transcription_text =client.audio.transcriptions.complete(
-                #                     model=config.MODEL_TRANSCRIPTION,
-                #                     file=voice_response,
-                #                 ).text
-
+              
                 # Chat
-                # print("ICI")
-                # print(*st.session_state.messages)
-           
-                # api_kwargs["messages"] 
-                # print(api_kwargs["messages"])
-                # print(api_kwargs["model"])
-                stream_response = client.chat.stream(**api_kwargs)
-                print(stream_response)
-                interviewer_message_transcript=''
-                for chunk in stream_response:
-                    interviewer_message_transcript+=chunk.data.choices[0].delta.content
+                chat_response = client.chat.complete(**api_kwargs)
+                interviewer_message_transcript=chat_response.choices[0].message.content
+                # interviewer_message_transcript=''
+                # for chunk in stream_response:
+                #     interviewer_message_transcript+=chunk.data.choices[0].delta.content
 
     
                 # text to speech
-                ref_audio_b64 = base64.b64encode(Path("resultat.mp3").read_bytes()).decode()
-                audio_chunks = []
-
-                with client.audio.speech.complete(
+                response = client.audio.speech.complete(
                     model="voxtral-mini-tts-2603",
                     input=interviewer_message_transcript,
-                    ref_audio=ref_audio_b64,
+                    voice_id=voice.id,
                     response_format="wav",
-                    stream=True,
-                ) as stream:
-                    for event in stream:
-                        if event.event == "speech.audio.delta":
-                            audio_chunks.append(base64.b64decode(event.data.audio_data))
-                        elif event.event == "speech.audio.done":
-                            print(f"Done. Tokens used: {event.data.usage}")
+                )
+                audio_bytes=base64.b64decode(response.audio_data)
+                # ref_audio_b64 = base64.b64encode(Path("resultat.mp3").read_bytes()).decode()
+                # audio_chunks = []
+                
+                # with client.audio.speech.complete(
+                #     model="voxtral-mini-tts-2603",
+                #     input=interviewer_message_transcript,
+                #     voice_id=voice.id,
+                #     response_format="wav",
+                #     stream=True,
+                # ) as stream:
+                #     for event in stream:
+                #         if event.event == "speech.audio.delta":
+                #             audio_chunks.append(base64.b64decode(event.data.audio_data))
+                #         elif event.event == "speech.audio.done":
+                #             print(f"Done. Tokens used: {event.data.usage}")
 
-                audio_bytes = b"".join(audio_chunks)
+                # audio_bytes = b"".join(audio_chunks)
             
 
             
@@ -377,9 +374,6 @@ if st.session_state.interview_active:
                         file=audio_response,
                     ).text
                 elif config.API=="mistral":
-                    # completion_response = client.chat.complete(**api_kwargs)
-                    # interviewer_message_audio_api =completion_response.choices[0].message.content
-             
                     # speech to text
                     voice_response={
                         "content": audio_response.getvalue(),
@@ -458,30 +452,38 @@ if st.session_state.interview_active:
                         # Transform WAV base64 string to bytes
                         audio_bytes = base64.b64decode(interviewer_message_audio_api)
                     elif config.API == "mistral":
-                        stream_response = client.chat.stream(**api_kwargs)
-                        interviewer_message_transcript=''
-                        for chunk in stream_response:
-                            interviewer_message_transcript+=chunk.data.choices[0].delta.content
+                        chat_response = client.chat.complete(**api_kwargs)
+                        # interviewer_message_transcript=''
+                        # for chunk in stream_response:
+                        #     interviewer_message_transcript+=chunk.data.choices[0].delta.content
+                        interviewer_message_transcript=chat_response.choices[0].message.content
 
                         # interviewer_message_audio_api = completion_response.choices[
                         #     0
                         # ].message.audio.data
 
                         # text to speech
-                        ref_audio_b64 = base64.b64encode(Path("resultat.mp3").read_bytes()).decode()
-                        audio_chunks = []
+                        response = client.audio.speech.complete(
+                        model="voxtral-mini-tts-2603",
+                        input=interviewer_message_transcript,
+                        voice_id=voice.id,
+                        response_format="wav",
+                        )
+                        audio_bytes=base64.b64decode(response.audio_data)
+                        # ref_audio_b64 = base64.b64encode(Path("resultat.mp3").read_bytes()).decode()
+                        # audio_chunks = []
 
-                        with client.audio.speech.complete(
-                            model="voxtral-mini-tts-2603",
-                            input=interviewer_message_transcript,
-                            ref_audio=ref_audio_b64,
-                            response_format="wav",
-                            stream=True,
-                        ) as stream:
-                            for event in stream:
-                                if event.event == "speech.audio.delta":
-                                     audio_chunks.append(base64.b64decode(event.data.audio_data))
-                        audio_bytes = b"".join(audio_chunks)
+                        # with client.audio.speech.complete(
+                        #     model="voxtral-mini-tts-2603",
+                        #     input=interviewer_message_transcript,
+                        #     voice_id=voice.id,
+                        #     response_format="wav",
+                        #     stream=True,
+                        # ) as stream:
+                        #     for event in stream:
+                        #         if event.event == "speech.audio.delta":
+                        #              audio_chunks.append(base64.b64decode(event.data.audio_data))
+                        # audio_bytes = b"".join(audio_chunks)
 
 
                     # Check for any closing codes
@@ -512,7 +514,7 @@ if st.session_state.interview_active:
                                 with client.audio.speech.complete(
                                     model="voxtral-mini-tts-2603",
                                     input=closing_message,
-                                    ref_audio=ref_audio_b64,
+                                    voice_id=voice.id,
                                     response_format="wav",
                                     stream=True,
                                 ) as stream:
