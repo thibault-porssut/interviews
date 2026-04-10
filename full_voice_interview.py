@@ -263,10 +263,6 @@ if not st.session_state.messages and st.session_state.interview_active:
                 # Chat
                 chat_response = client.chat.complete(**api_kwargs)
                 interviewer_message_transcript=chat_response.choices[0].message.content
-                # interviewer_message_transcript=''
-                # for chunk in stream_response:
-                #     interviewer_message_transcript+=chunk.data.choices[0].delta.content
-
     
                 # text to speech
                 response = client.audio.speech.complete(
@@ -276,26 +272,6 @@ if not st.session_state.messages and st.session_state.interview_active:
                     response_format="wav",
                 )
                 audio_bytes=base64.b64decode(response.audio_data)
-                # ref_audio_b64 = base64.b64encode(Path("resultat.mp3").read_bytes()).decode()
-                # audio_chunks = []
-                
-                # with client.audio.speech.complete(
-                #     model="voxtral-mini-tts-2603",
-                #     input=interviewer_message_transcript,
-                #     voice_id=voice.id,
-                #     response_format="wav",
-                #     stream=True,
-                # ) as stream:
-                #     for event in stream:
-                #         if event.event == "speech.audio.delta":
-                #             audio_chunks.append(base64.b64decode(event.data.audio_data))
-                #         elif event.event == "speech.audio.done":
-                #             print(f"Done. Tokens used: {event.data.usage}")
-
-                # audio_bytes = b"".join(audio_chunks)
-            
-
-            
 
             # Determine duration of WAV
             interviewer_message_duration = get_wav_duration(audio_bytes)
@@ -462,14 +438,8 @@ if st.session_state.interview_active:
                         audio_bytes = base64.b64decode(interviewer_message_audio_api)
                     elif config.API == "mistral":
                         chat_response = client.chat.complete(**api_kwargs)
-                        # interviewer_message_transcript=''
-                        # for chunk in stream_response:
-                        #     interviewer_message_transcript+=chunk.data.choices[0].delta.content
+           
                         interviewer_message_transcript=chat_response.choices[0].message.content
-
-                        # interviewer_message_audio_api = completion_response.choices[
-                        #     0
-                        # ].message.audio.data
 
                         # text to speech
                         response = client.audio.speech.complete(
@@ -479,20 +449,6 @@ if st.session_state.interview_active:
                         response_format="wav",
                         )
                         audio_bytes=base64.b64decode(response.audio_data)
-                        # ref_audio_b64 = base64.b64encode(Path("resultat.mp3").read_bytes()).decode()
-                        # audio_chunks = []
-
-                        # with client.audio.speech.complete(
-                        #     model="voxtral-mini-tts-2603",
-                        #     input=interviewer_message_transcript,
-                        #     voice_id=voice.id,
-                        #     response_format="wav",
-                        #     stream=True,
-                        # ) as stream:
-                        #     for event in stream:
-                        #         if event.event == "speech.audio.delta":
-                        #              audio_chunks.append(base64.b64decode(event.data.audio_data))
-                        # audio_bytes = b"".join(audio_chunks)
 
 
                     # Check for any closing codes
@@ -589,9 +545,6 @@ if st.session_state.interview_active:
                             st.rerun()
 
                     # If no closing code was found in message, proceed as normal
-
-                    # Transform WAV base64 string to bytes
-                    # audio_bytes = base64.b64decode(interviewer_message_audio_api)
 
                     # Determine duration of WAV
                     interviewer_message_duration = get_wav_duration(audio_bytes)
