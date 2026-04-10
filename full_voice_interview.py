@@ -252,9 +252,8 @@ if not st.session_state.messages and st.session_state.interview_active:
                 ].message.audio.transcript
                 # Transform WAV base64 string to bytes
                 audio_bytes = base64.b64decode(interviewer_message_audio_api)
-                Path("sample_female.mp3").write_bytes(audio_bytes)
-                Path("sample_female.wav").write_bytes(audio_bytes)
-                Path("sample_female.opus").write_bytes(audio_bytes)
+                # Path("sample_female.opus").write_bytes(audio_bytes)
+                # Path("sample_female.mp3").write_bytes(audio_bytes)
 
 
                 
