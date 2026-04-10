@@ -191,15 +191,20 @@ if config.API == "openai":
 elif config.API == "mistral":
     api_kwargs["messages"] = st.session_state.messages
     api_kwargs["model"] = config.MODEL
-    sample_audio_b64 = base64.b64encode(Path("resultat.mp3").read_bytes()).decode()
+    sample_audio_b64 = base64.b64encode(Path("sample_female.opus").read_bytes()).decode()
 
-    voice = client.audio.voices.create(
-        name="interviewer_voice",
-        sample_audio=sample_audio_b64,
-        sample_filename="resultat.mp3",
-        languages=["en", "fr"],
-        gender="female",
-    )
+
+    if "mistral_voice_id" not in st.session_state:
+        sample_audio_b64 = base64.b64encode(Path("sample_female.opus").read_bytes()).decode()
+        voice = client.audio.voices.create(
+            name="interviewer_voice",
+            sample_audio=sample_audio_b64,
+            sample_filename="sample_female.opus",
+            languages=["en", "fr"],
+            gender="female",
+        )
+
+        st.session_state.mistral_voice_id = voice.id
 
 
 
@@ -247,7 +252,11 @@ if not st.session_state.messages and st.session_state.interview_active:
                 ].message.audio.transcript
                 # Transform WAV base64 string to bytes
                 audio_bytes = base64.b64decode(interviewer_message_audio_api)
-                
+                Path("sample_female.mp3").write_bytes(audio_bytes)
+                Path("sample_female.wav").write_bytes(audio_bytes)
+                Path("sample_female.opus").write_bytes(audio_bytes)
+
+
                 
             elif config.API == "mistral":
               
@@ -263,7 +272,7 @@ if not st.session_state.messages and st.session_state.interview_active:
                 response = client.audio.speech.complete(
                     model="voxtral-mini-tts-2603",
                     input=interviewer_message_transcript,
-                    voice_id=voice.id,
+                    voice_id=st.session_state.mistral_voice_id,
                     response_format="wav",
                 )
                 audio_bytes=base64.b64decode(response.audio_data)
@@ -466,7 +475,7 @@ if st.session_state.interview_active:
                         response = client.audio.speech.complete(
                         model="voxtral-mini-tts-2603",
                         input=interviewer_message_transcript,
-                        voice_id=voice.id,
+                        voice_id=st.session_state.mistral_voice_id,
                         response_format="wav",
                         )
                         audio_bytes=base64.b64decode(response.audio_data)
@@ -514,7 +523,7 @@ if st.session_state.interview_active:
                                 with client.audio.speech.complete(
                                     model="voxtral-mini-tts-2603",
                                     input=closing_message,
-                                    voice_id=voice.id,
+                                    voice_id=st.session_state.mistral_voice_id,
                                     response_format="wav",
                                     stream=True,
                                 ) as stream:

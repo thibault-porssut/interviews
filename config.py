@@ -89,9 +89,9 @@ API="mistral"
 # MODEL = "gpt-4.1-2025-04-14"  # make sure to set API accordingly
 # For voice-only interviews via `streamlit run full_voice_interview.py`, set e.g.
 # MODEL = "gpt-audio-2025-08-28"
-# MODEL="mistral-medium-2508"
+MODEL="mistral-medium-2508"
 # MODEL_MISTRAL_AUDIO="voxtral-mini-transcribe-realtime-2602"
-MODEL="voxtral-mini-latest"
+# MODEL="voxtral-mini-latest"
 
 
 # Additional API arguments
