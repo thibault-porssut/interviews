@@ -97,7 +97,7 @@ API="mistral"
 # MODEL = "gpt-audio-2025-08-28"
 # MODEL="mistral-medium-2508"
 # MODEL_MISTRAL_AUDIO="voxtral-mini-transcribe-realtime-2602"
-MODEL="voxtral-mini-latest"
+MODEL="ministral-8b-2512"
 
 
 # Additional API arguments
@@ -132,7 +132,7 @@ ADDITIONAL_API_KWARGS = {}
 # similarly)
 # MODEL_TRANSCRIPTION = "whisper-1"  # or e.g. gpt-4o-transcribe or gpt-4o-mini-transcribe
 # to increase transcription accuracy
-MODEL_TRANSCRIPTION="voxtral-mini-latest"
+MODEL_TRANSCRIPTION="voxtral-mini-transcribe-realtime-2602"
 
 
 # Directories
