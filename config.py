@@ -97,7 +97,7 @@ API="mistral"
 # MODEL = "gpt-audio-2025-08-28"
 # MODEL="mistral-medium-2508"
 # MODEL_MISTRAL_AUDIO="voxtral-mini-transcribe-realtime-2602"
-MODEL="ministral-8b-2512"
+MODEL="mistral-small-2603"
 
 
 # Additional API arguments
