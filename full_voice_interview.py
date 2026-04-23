@@ -20,6 +20,7 @@ import streamlit as st
 from openai import OpenAI
 from mistralai.client import Mistral
 from scipy.io import wavfile
+import asyncio
 
 import config
 from utils import (
@@ -29,6 +30,56 @@ from utils import (
     save_transcript_and_metadata,
     is_transcript_saved,
 )
+
+async def buffer_streamer(audio_bytes, chunk_size=16000):
+    try:  
+        pcm_data = audio_bytes[44:]
+        for i in range(0, len(pcm_data), chunk_size):
+            yield audio_bytes[i : i + chunk_size]
+            await asyncio.sleep(0.01)
+    except Exception as e:
+        print(f"Error streaming : {e}")
+        
+
+async def transcribe_offline(audio_bytes):
+    from mistralai.extra.realtime import UnknownRealtimeEvent
+    from mistralai.client.models import AudioFormat, RealtimeTranscriptionError, RealtimeTranscriptionSessionCreated, TranscriptionStreamDone, TranscriptionStreamTextDelta
+
+    audio_format = AudioFormat(encoding="pcm_s16le", sample_rate=16000)
+    
+    full_transcription = []
+
+    try:
+        async for event in client.audio.realtime.transcribe_stream(
+            audio_stream=buffer_streamer(audio_bytes.getvalue()),
+            model="voxtral-mini-transcribe-realtime-2602",
+            audio_format=audio_format,
+        ):
+            # if isinstance(event, TranscriptionStreamTextDelta):
+            #     full_transcription.append(event.text)
+            
+            # elif isinstance(event, TranscriptionStreamDone):
+            #     break
+
+            if isinstance(event, RealtimeTranscriptionSessionCreated):
+                 print(f"Session created.")
+            elif isinstance(event, TranscriptionStreamTextDelta):
+                print(event.text, end="", flush=True)
+                full_transcription.append(event.text)
+            elif isinstance(event, TranscriptionStreamDone):
+                print("Transcription done.")
+                break
+            elif isinstance(event, RealtimeTranscriptionError):
+                print(f"Error: {event}")
+            elif isinstance(event, UnknownRealtimeEvent):
+                print(f"Unknown event: {event}")
+                continue
+
+        return "".join(full_transcription)
+    
+    except Exception as e:
+        print(f"Erreur lors de la transcription : {e}")
+        return None
 
 
 # Helper function
@@ -359,15 +410,16 @@ if st.session_state.interview_active:
                     ).text
                 elif config.API=="mistral":
                     # speech to text
-                    voice_response={
-                        "content": audio_response.getvalue(),
-                        "file_name": audio_response.name,
-                    }
+                    # voice_response={
+                    #     "content": audio_response.getvalue(),
+                    #     "file_name": audio_response.name,
+                    # }
 
-                    user_transcription =client.audio.transcriptions.complete(
-                                        model=config.MODEL_TRANSCRIPTION,
-                                        file=voice_response,
-                                    ).text
+                    # user_transcription =client.audio.transcriptions.complete(
+                    #                     model=config.MODEL_TRANSCRIPTION,
+                    #                     file=voice_response,
+                    #                 ).text
+                    user_transcription = asyncio.run(transcribe_offline(audio_response))
 
                 # Cache transcription in session_state to reuse it on reruns
                 st.session_state.last_transcription = user_transcription
@@ -585,3 +637,4 @@ if st.session_state.interview_active:
                 # Refresh to show a new voice_input element
                 st.session_state.voice_input_key = random.uniform(0, 1)
                 st.rerun()
+
